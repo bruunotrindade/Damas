@@ -7,7 +7,7 @@ import java.net.URL;
 public class Main
 {
 	public Main() {
-		play();
+		//play();
 	}
 
 	public void play() {

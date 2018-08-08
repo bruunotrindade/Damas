@@ -28,6 +28,8 @@ public class Tabuleiro extends JFrame implements ActionListener
 	Fila comerI = new Fila(10);
 	Fila comerJ = new Fila(10);
 	
+	String maioresJogadas[] = new String[10];
+	int indJogada = 0;
 	
 	public Tabuleiro()
 	{
@@ -282,12 +284,47 @@ public class Tabuleiro extends JFrame implements ActionListener
 		proximaRodada();
 	}
 	
+	
+	public void verificar(int i, int j, int tamanho, int maior, String mov)
+	{
+		boolean Achou = false;
+		if(i >= 2 && j >= 2 && !casa[i-1][j-1].vazia() && casa[i-1][j-1].pecaAtual().getTipo() != jogadorDaRodada && casa[i-2][j-2].vazia())
+		{
+			Achou = true;
+			verificar(i-2, j-2, tamanho+1, maior, mov + "|" + (i-2) + "-" + (j-2));
+		}
+		if(i >= 2 && j <= 5 && !casa[i-1][j+1].vazia() && casa[i-1][j+1].pecaAtual().getTipo() != jogadorDaRodada && casa[i-2][j+2].vazia())
+		{
+			Achou = true;
+			verificar(i-2, j+2, tamanho+1, maior, mov + "|" + (i-2) + "-" + (j+2));
+		}
+		if(i <= 5 && j >= 2 && !casa[i+1][j-1].vazia() && casa[i+1][j-1].pecaAtual().getTipo() != jogadorDaRodada && casa[i+2][j-2].vazia())
+		{
+			Achou = true;
+			verificar(i+2, j-2, tamanho+1, maior, mov + "|" + (i+2) + "-" + (j-2));
+		}
+		if(i <= 5 && j <= 5 && !casa[i+1][j+1].vazia() && casa[i+1][j+1].pecaAtual().getTipo() != jogadorDaRodada && casa[i+2][j+2].vazia())
+		{
+			Achou = true;
+			verificar(i+2, j+2, tamanho+1, maior, mov + "|" + (i+2) + "-" + (j+2));
+		}
+		
+		if(tamanho > maior)
+		{
+			maior = tamanho;
+			indJogada = 0;
+			maioresJogadas[indJogada++] = mov;
+		}
+		else if(tamanho == maior)
+			maioresJogadas[indJogada++] = mov;
+	}
+	
 	public void verificarJogada(int i, int j)
 	{
 		boolean frente1 = false, frente2 = false, tras1 = false, tras2 = false;
 		int I = i, J = j;
 		
-		//Comendo para frente
+		/*//Comendo para frente
 		while(i >= 2 && j >= 2 && !casa[i-1][j-1].vazia() && casa[i-1][j-1].pecaAtual().getTipo() != jogadorDaRodada && casa[i-2][j-2].vazia())
 		{
 			frente1 = true;
@@ -337,7 +374,7 @@ public class Tabuleiro extends JFrame implements ActionListener
 			comerJ.adicionar(j+1);
 			i += 2;
 			j += 2;
-		}
+		}*/
 		comerI.adicionar(i);
 		comerJ.adicionar(j);
 		casa[i][j].setMarcada(true);

@@ -22,12 +22,6 @@ public class Main extends JFrame implements ActionListener
 	
 	public Main() 
 	{
-		setVisible(true);
-		setSize(497, 399);
-		setResizable(false);
-		setTitle("Damas");
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setLocationRelativeTo(null);
 		
 		setLayout(new BorderLayout());
 		add(fundo);
@@ -47,6 +41,13 @@ public class Main extends JFrame implements ActionListener
 		btDoisJogadores.addActionListener(this);
 		btDoisJogadores.setBackground(Color.WHITE);
 		//play();
+
+		setVisible(true);
+		setSize(490, 399);
+		setResizable(false);
+		setLocationRelativeTo(null);
+		setTitle("Damas");
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 
 	public void play() {

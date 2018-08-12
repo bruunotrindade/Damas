@@ -10,7 +10,7 @@ import java.net.URL;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 
-public class Main extends JFrame implements ActionListener
+public class Inicio extends JFrame implements ActionListener
 {
 	JPanel p1 = new JPanel();
 	JPanel p2 = new JPanel();
@@ -20,9 +20,8 @@ public class Main extends JFrame implements ActionListener
 	JButton btUmJogador = new JButton("Um jogador");
 	JButton btDoisJogadores = new JButton("Dois jogadores");
 	
-	public Main() 
+	public Inicio() 
 	{
-		
 		setLayout(new BorderLayout());
 		add(fundo);
 		fundo.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 225));
@@ -58,14 +57,18 @@ public class Main extends JFrame implements ActionListener
 	
 	public static void main(String[] args)
 	{
-		new Main();
-		//new Tabuleiro();
+		new Inicio();
 	}
 
 	public void actionPerformed(ActionEvent e)
 	{
 		if(e.getSource() == btUmJogador)
 		{
+			/*Jogador jg = new Jogador("Preto");
+			JanelaFinal end = new JanelaFinal(0, 0);
+			end.setVencedor(jg);
+			end.setTempo(68);
+			end.mostrar();*/
 			dispose();
 			new Tabuleiro();
 		}

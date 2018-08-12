@@ -22,10 +22,10 @@ public class Tabuleiro extends JFrame implements ActionListener
 	JLabel lbJogador = new JLabel("Jogador preto");
 	JLabel lbTempo = new JLabel("00:00");
 	
-	Timer timer;
-	
 	Casa casa[][] = new Casa[8][8];
 	Peca peca[] = new Peca[24];
+	
+	Timer timer;
 	
 	Casa pecaComer;
 	
@@ -36,8 +36,10 @@ public class Tabuleiro extends JFrame implements ActionListener
 	int pecaInd = 0;
 	int clickI;
 	int clickJ;
-	int numPecas[] = new int[2];
 	boolean doisJogadores = false;
+	boolean iniciado = false;
+	
+	Jogador jogador[] = new Jogador[2];
 	
 	//Auxiliares para salvar dados em comida
 	Fila comerI[] = new Fila[10];
@@ -49,6 +51,8 @@ public class Tabuleiro extends JFrame implements ActionListener
 	int maiorTamanho = 0;
 	
 	Random rand = new Random();
+	
+	BTimer bTimer = new BTimer();
 	
 	public Tabuleiro()
 	{
@@ -64,6 +68,9 @@ public class Tabuleiro extends JFrame implements ActionListener
 	
 	public void construtor()
 	{
+		jogador[0] = new Jogador("Branco");
+		jogador[1] = new Jogador("Preto");
+		
 		for(int i = 0; i < 10; i++)
 		{
 			comerI[i] = new Fila(10);
@@ -91,13 +98,13 @@ public class Tabuleiro extends JFrame implements ActionListener
 		p2.add(lbJogador);
 		
 		lbJogador.setForeground(Color.WHITE);
-		lbJogador.setFont(new Font("Arial", Font.BOLD, 22));
+		lbJogador.setFont(new Font("Arial", Font.BOLD, 24));
 		
 		p5.add(p3);
 		p3.add(lbTempo);
 		
 		lbTempo.setForeground(Color.WHITE);
-		lbTempo.setFont(new Font("Arial", Font.BOLD, 22));
+		lbTempo.setFont(new Font("Arial", Font.BOLD, 24));
 		
 		p1.add(p5);
 		p1.add(p4);
@@ -116,7 +123,6 @@ public class Tabuleiro extends JFrame implements ActionListener
 			}
 		});
 		timer.setRepeats(true);
-		timer.start();
 		
 		iniciarJogo();
 		
@@ -142,9 +148,14 @@ public class Tabuleiro extends JFrame implements ActionListener
 							tipo = 1;
 						
 						peca[pecasInd++] = new Peca(tipo, i, j);
-						numPecas[tipo]++;
+						jogador[tipo].incPecas();
 						casa[i][j].atualizarPeca(peca[pecasInd-1]);
 						casa[i][j].setVazia(false);
+					}
+					else
+					{
+						casa[i][j].setVazia(true);
+						casa[i][j].removerPeca();
 					}
 			}
 	}
@@ -167,16 +178,13 @@ public class Tabuleiro extends JFrame implements ActionListener
 			{
 				int I = peca[i].getPosI(), J = peca[i].getPosJ();	
 				limparJogadas();
-				System.out.println("Pedra: " + I + " " + J + "\n");
-				if(simularJogada(I, J, true, true, true, true, true, 0, "", peca[i].dama()))
+				if(simularJogada(I, J, true, true, true, true, true, 0, "", peca[i].dama(), ""))
 				{
 					if(maiorTamanho >= maior)
 					{
 						if(maiorTamanho > maior)
 						{
-							System.out.println("Maior jogada");
 							maior = maiorTamanho;
-							System.out.println(maioresJogadas[indJogada-1] + "\n\n");
 							for(int j = inicio; j < i; j++)
 							{
 								peca[j].setJogavel(false);
@@ -184,8 +192,6 @@ public class Tabuleiro extends JFrame implements ActionListener
 								casa[peca[j].getPosI()][peca[j].getPosJ()].setMarcada(false);
 							}
 						}
-						System.out.println("Tamanho da Jogada: " + maiorTamanho);
-						System.out.println("CACETE DE AGULHA");
 						marcarPeca(casa[I][J]);
 						peca[i].setComer(true);
 						Comer = true;
@@ -228,7 +234,7 @@ public class Tabuleiro extends JFrame implements ActionListener
 		}
 	}
 
-	public void moverPeca(Casa origem, Casa destino)
+	public static void moverPeca(Casa origem, Casa destino)
 	{
 		destino.atualizarPeca(origem.pecaAtual());
 		destino.pecaAtual().setPosI(destino.getPosI());
@@ -286,8 +292,9 @@ public class Tabuleiro extends JFrame implements ActionListener
 					else if(casa[i][j] != casa[clickI][clickJ] && casa[i][j].marcada() && casa[clickI][clickJ].pecaAtual().comer() && casa[clickI][clickJ].marcada())
 					{
 						desmarcarCasas(1);
+						bTimer.setInitial(250);
 						comerPeca(casa[clickI][clickJ], casa[i][j]);		
-						proximaRodada();
+						//proximaRodada();
 					}
 					//Clique na casa futura do movimento
 					else if(casa[i][j] != casa[clickI][clickJ] && casa[i][j].marcada() && casa[clickI][clickJ].marcada())
@@ -304,7 +311,7 @@ public class Tabuleiro extends JFrame implements ActionListener
 	
 	public void proximaRodada()
 	{
-		if(numPecas[0] != 0 && numPecas[1] != 0)
+		if(jogador[0].getPecas() != 0 && jogador[1].getPecas() != 0)
 		{
 			if(jogadorDaRodada == 1)
 			{
@@ -322,17 +329,27 @@ public class Tabuleiro extends JFrame implements ActionListener
 			else
 				marcarPecas();
 		}
-		else if(numPecas[0] == 0)
-		{
-			timer.stop();
-			JOptionPane.showMessageDialog(null, String.format("Vitória do jogador Branco\nTempo: %02d:%02d", (int)(tempo/60), tempo%60));
-		}
 		else
 		{
-			timer.stop();
-			JOptionPane.showMessageDialog(null, String.format("Vitória do jogador Preto\nTempo: %02d:%02d", (int)(tempo/60), tempo%60));
+			int vencedor = -1;
+			if(jogador[0].getPecas() == 0)
+				vencedor = 0;
+			else
+				vencedor = 1;
+			
+			if(vencedor != -1)
+			{
+				timer.stop();
+				if(jogador[vencedor].getMelhorTempo() > tempo)
+					jogador[vencedor].setMelhorTempo(tempo);
+				
+				JanelaFinal end = new JanelaFinal(0, vencedor);
+				end.setTabuleiro(this);
+				end.setVencedor(jogador[vencedor]);
+				end.setTempo(tempo);
+				end.mostrar();
+			}
 		}
-		
 	}
 	
 	public void jogadaPC()
@@ -345,47 +362,43 @@ public class Tabuleiro extends JFrame implements ActionListener
 				int I = peca[i].getPosI(), J = peca[i].getPosJ();
 				
 				limparJogadas();
-				if(simularJogada(peca[i].getPosI(), peca[i].getPosJ(), true, true, true, true, true, 0, "", peca[i].dama()) && indJogada > 0)//Marcando as pecas envolvidas no movimento de comer
+				if(simularJogada(peca[i].getPosI(), peca[i].getPosJ(), true, true, true, true, true, 0, "", peca[i].dama(), "") && indJogada > 0)//Marcando as pecas envolvidas no movimento de comer
 				{
 					int x = rand.nextInt(indJogada);
-					//System.out.println(maioresJogadas[x]);
 					if(maioresJogadas[x].charAt(maioresJogadas[x].length()-1) == '/')
 						maioresJogadas[x] = maioresJogadas[x].substring(0, maioresJogadas[x].length()-1);
 					
-					//System.out.println(maioresJogadas[x]);
 					I = 0;
 					J = 0;
 					int y;
 					String indComer[] = maioresJogadas[x].split("/");
+					
+					Casa casaComer = null, casaMover = null;
 					for(y = 1; y < indComer.length; y += 2)
 					{
 						I = Integer.parseInt(indComer[y-1]);
 						J = Integer.parseInt(indComer[y]);
+						
 						if(!casa[I][J].vazia())
+							casaComer = casa[I][J];
+						else
+							casaMover = casa[I][J];
+						
+						if(casaComer != null && casaMover != null)
 						{
-							comerI[x].adicionar(I);
-							comerJ[x].adicionar(J);
-							System.out.printf("Comer (%d,%d)\n", I, J);
+							bTimer.setComer(casa[peca[i].getPosI()][peca[i].getPosJ()], casaComer, casaMover);
+							casaComer = null;
+							casaMover = null;
 						}
 					}
+					bTimer.start();
 					Comer = true;
-					for(y = indComer.length-1; y > 0; y -= 2)
-					{
-						I = Integer.parseInt(indComer[y-1]);
-						J = Integer.parseInt(indComer[y]);
-						if(casa[I][J].vazia())
-						{
-							comerPeca(casa[peca[i].getPosI()][peca[i].getPosJ()], casa[I][J]);
-							break;
-						}
-					}
 				}
 			}
 		}
 		
 		if(!Comer)
 		{
-			System.out.println("Pora meu, n comeu");
 			for(int i = 0; i < 12; i++)
 			{
 				if(peca[i].emJogo())
@@ -395,13 +408,15 @@ public class Tabuleiro extends JFrame implements ActionListener
 						int I = peca[i].getPosI(), J = peca[i].getPosJ();
 						if(I <= 6 && J <= 6 && casa[I+1][J+1].vazia())
 						{
-							moverPeca(casa[I][J], casa[I+1][J+1]);
+							bTimer.setMove(casa[I][J], casa[I+1][J+1]);
+							bTimer.start();
 							break;
 						}
 						
 						if(I <= 6 && J >= 1 && casa[I+1][J-1].vazia())
 						{
-							moverPeca(casa[I][J], casa[I+1][J-1]);
+							bTimer.setMove(casa[I][J], casa[I+1][J-1]);
+							bTimer.start();
 							break;
 						}
 					}
@@ -412,7 +427,7 @@ public class Tabuleiro extends JFrame implements ActionListener
 				}
 			}
 		}
-		proximaRodada();
+		//proximaRodada();
 	}
 	
 	public void adicionarComer(int I, int J, int Is, int Js)
@@ -428,49 +443,73 @@ public class Tabuleiro extends JFrame implements ActionListener
 	public void comerPeca(Casa comedor, Casa futura)
 	{
 		int indiceJogada = -1;
-		//System.out.println("\n\nJOGADAS DE CLIQUE");
 		for(int x = 0; x < indJogada; x++)
 		{
 			String indComer[] = maioresJogadas[x].split("/");
 			if(maioresJogadas[x].length() > 0 && maioresJogadas[x].charAt(maioresJogadas[x].length()-1) == '/')
 				indComer = maioresJogadas[x].substring(0, maioresJogadas[x].length()-1).split("/");
 			
-			//System.out.println(maioresJogadas[x]);
 			if(Integer.parseInt(indComer[indComer.length-2]) == futura.getPosI() && Integer.parseInt(indComer[indComer.length-1]) == futura.getPosJ())
 			{
 				indiceJogada = x;
 				break;
 			}
 		}
-		//System.out.println("Ind jogada = " + indiceJogada);
 		if(indiceJogada != -1)
 		{
-			int i;
 			String indComer[];
 			if(maioresJogadas[indiceJogada].charAt(maioresJogadas[indiceJogada].length()-1) == '/')
 				indComer = maioresJogadas[indiceJogada].substring(0, maioresJogadas[indiceJogada].length()-1).split("/");
 			else
 				indComer = maioresJogadas[indiceJogada].split("/");
 			
-			//System.out.println("Tamanho: " + comerI[indiceJogada].size());
-			for(i = 0; i < comerI[indiceJogada].size(); i++)
+			System.out.println("JOGADA:");
+			
+			Casa casaComer = null, casaMover = null;
+			for(int y = 1; y < indComer.length; y += 2)
 			{
-				//System.out.println("Fila: " + i + " " + comerI[indiceJogada].obter(i) + " " + comerJ[indiceJogada].obter(i));
-				if(!casa[comerI[indiceJogada].obter(i)][comerJ[indiceJogada].obter(i)].vazia())
+				int I = Integer.parseInt(indComer[y-1]), J = Integer.parseInt(indComer[y]);
+				
+				if(!casa[I][J].vazia())
 				{
-					//System.out.printf("Comer (%d,%d)\n", comerI[indiceJogada].obter(i), comerJ[indiceJogada].obter(i));
-					numPecas[casa[comerI[indiceJogada].obter(i)][comerJ[indiceJogada].obter(i)].pecaAtual().getTipo()]--;
-					casa[comerI[indiceJogada].obter(i)][comerJ[indiceJogada].obter(i)].pecaAtual().setEmJogo(false);
-					casa[comerI[indiceJogada].obter(i)][comerJ[indiceJogada].obter(i)].pecaAtual().setJogavel(false);
-					casa[comerI[indiceJogada].obter(i)][comerJ[indiceJogada].obter(i)].removerPeca();
+					casaComer = casa[I][J];
+					System.out.printf("Comer: (%d, %d)\n", I, J);
 				}
+				else
+				{
+					casaMover = casa[I][J];
+					System.out.printf("Mover: (%d, %d)\n", I, J);
+					bTimer.setMove(comedor, casaMover);
+					y += 2;
+				}
+				
+				if(casaComer != null)
+				{
+					System.out.println("COMER ADICIONADO");
+					y += 2;
+					I = Integer.parseInt(indComer[y-1]);
+					J = Integer.parseInt(indComer[y]);
+					casaMover = casa[I][J];
+					bTimer.setComer(comedor, casaComer, casaMover);
+					casaComer = null;
+					casaMover = null;
+				}
+				
+				/*if(casaComer != null && casaMover != null)
+				{
+					System.out.println("COMER ADICIONADO");
+					bTimer.setComer(comedor, casaComer, casaMover);
+					casaComer = null;
+					casaMover = null;
+				}*/
 			}
-			//System.out.printf("Mover (%d,%d)\n\n", futura.getPosI(), futura.getPosJ());
-			if(!comedor.vazia())
+			/*for(int y = ultimoMov+2; y < indComer.length; y += 2)
 			{
-				comedor.pecaAtual().setComer(false);
-				moverPeca(comedor, futura);
-			}
+				System.out.println("MOVIMENTO ADICIONADO");
+				int I = Integer.parseInt(indComer[y-1]), J = Integer.parseInt(indComer[y]);
+				bTimer.setMove(comedor, casa[I][J]);
+			}*/
+			bTimer.start();
 		}
 		
 		limparJogadas();
@@ -478,52 +517,60 @@ public class Tabuleiro extends JFrame implements ActionListener
 	
 	public void iniciarJogo()
 	{
+		tempo = 0;
 		posicionarPecas();
+		timer.start();
 		proximaRodada();
 	}
 	
-	public boolean simularJogada(int i, int j, boolean f1, boolean f2, boolean t2, boolean t1, boolean mover, int tamanho, String mov, boolean dama)
+	public boolean simularJogada(int i, int j, boolean f1, boolean f2, boolean t2, boolean t1, boolean mover, int tamanho, String mov, boolean dama, String pecasComidas)
 	{
 		boolean comer = false;
-		//System.out.println("SIMULACAO");
-		if(mov.length() > 0)
-			System.out.println("Movimento: " + mov);
+		boolean movDiagonal = false;
 		//Comendo para frente
-		if(i >= 2 && j >= 2 && f1 && !casa[i-1][j-1].vazia() && casa[i-1][j-1].pecaAtual().getTipo() != jogadorDaRodada && casa[i-2][j-2].vazia())
+		if(i >= 2 && j >= 2 && f1 && !casa[i-1][j-1].vazia() && casa[i-1][j-1].pecaAtual().getTipo() != jogadorDaRodada && casa[i-2][j-2].vazia() && !pecasComidas.contains(String.format("%d-%d/", i-2, j-2)))
 		{
-			System.out.println("Cima esquerda");
-			simularJogada(i-2, j-2, true, true, false, true, true, tamanho+1, mov + String.format("%d/%d/%d/%d/", i-1, j-1, i-2, j-2), dama);
+			simularJogada(i-2, j-2, true, true, false, true, true, tamanho+1, mov + String.format("%d/%d/%d/%d/", i-1, j-1, i-2, j-2), dama, pecasComidas + String.format("%d-%d/", i-2, j-2));
 			comer = true;
+			
+			if(dama && f1 && !f2 && !t2 && !t1)
+				movDiagonal = true;
 		}
 
-		if(i >= 2 && j <= 5 && f2 && !casa[i-1][j+1].vazia() && casa[i-1][j+1].pecaAtual().getTipo() != jogadorDaRodada && casa[i-2][j+2].vazia())
+		if(i >= 2 && j <= 5 && f2 && !casa[i-1][j+1].vazia() && casa[i-1][j+1].pecaAtual().getTipo() != jogadorDaRodada && casa[i-2][j+2].vazia() && !pecasComidas.contains(String.format("%d-%d/", i-2, j+2)) && !movDiagonal)
 		{
-			System.out.println("Cima direita");
-			simularJogada(i-2, j+2, true, true, true, false, true, tamanho+1, mov + String.format("%d/%d/%d/%d/", i-1, j+1, i-2, j+2), dama);
+			simularJogada(i-2, j+2, true, true, true, false, true, tamanho+1, mov + String.format("%d/%d/%d/%d/", i-1, j+1, i-2, j+2), dama, pecasComidas + String.format("%d-%d/", i-2, j+2));
 			comer = true;
+			
+			if(dama && !f1 && f2 && !t2 && !t1)
+				movDiagonal = true;
 		}
 	
 		//Comendo para tras
-		if(i <= 5 && j >= 2 && t1 && !casa[i+1][j-1].vazia() && casa[i+1][j-1].pecaAtual().getTipo() != jogadorDaRodada && casa[i+2][j-2].vazia())
+		if(i <= 5 && j >= 2 && t1 && !casa[i+1][j-1].vazia() && casa[i+1][j-1].pecaAtual().getTipo() != jogadorDaRodada && casa[i+2][j-2].vazia() && !pecasComidas.contains(String.format("%d-%d/", i+2, j-2)) && !movDiagonal)
 		{
-			System.out.println("Baixo esquerda");
-			simularJogada(i+2, j-2, true, false, true, true, true, tamanho+1, mov + String.format("%d/%d/%d/%d/", i+1, j-1, i+2, j-2), dama);
+			simularJogada(i+2, j-2, true, false, true, true, true, tamanho+1, mov + String.format("%d/%d/%d/%d/", i+1, j-1, i+2, j-2), dama, pecasComidas + String.format("%d-%d/", i+2, j-2));
 			comer = true;
+			
+			if(dama && !f1 && !f2 && t2 && !t1)
+				movDiagonal = true;
 		}
 
-		if(i <= 5 && j <= 5 && t2 && !casa[i+1][j+1].vazia() && casa[i+1][j+1].pecaAtual().getTipo() != jogadorDaRodada && casa[i+2][j+2].vazia())
+		if(i <= 5 && j <= 5 && t2 && !casa[i+1][j+1].vazia() && casa[i+1][j+1].pecaAtual().getTipo() != jogadorDaRodada && casa[i+2][j+2].vazia() && !pecasComidas.contains(String.format("%d-%d/", i+2, j+2)) && !movDiagonal)
 		{
-			System.out.println("Baixo direita");
-			simularJogada(i+2, j+2, false, true, true, true, true, tamanho+1, mov + String.format("%d/%d/%d/%d/", i+1, j+1, i+2, j+2), dama);
+			simularJogada(i+2, j+2, false, true, true, true, true, tamanho+1, mov + String.format("%d/%d/%d/%d/", i+1, j+1, i+2, j+2), dama, pecasComidas + String.format("%d-%d/", i+2, j+2));
 			comer = true;
+			
+			if(dama && !f1 && !f2 && !t2 && t1)
+				movDiagonal = true;
 		}
 		
 		
-		if(!comer && mover && dama)
+		if(!comer && mover && dama && !movDiagonal)
 		{
+			String movAux = mov;
 			if(i >= 1 && j >= 1 && f1 && casa[i-1][j-1].vazia())
 			{
-				String movAux = mov;
 				//Verificando o movimento para cima e esquerda
 				for(int I = i-1, J = j-1; I >= 0 && J >= 0; I--, J--)
 				{
@@ -532,16 +579,16 @@ public class Tabuleiro extends JFrame implements ActionListener
 					else
 					{
 						mov += String.format("%d/%d/%d/%d/", I, J, I, J);
-						System.out.println("Mov cima esquerda " + I + " " + J);
-						comer = simularJogada(I, J, true, true, false, true, false, tamanho, mov, dama);
-						System.out.println("RETORNO");
+						comer = simularJogada(I, J, true, false, false, false, false, tamanho, mov, dama, pecasComidas);
+						//comer = simularJogada(I, J, true, true, false, true, false, tamanho, mov, dama, pecasComidas);
 					}
 				}
+				mov = movAux;
 			}
 			
 			if(i >= 1 && j <= 6 && f2 && casa[i-1][j+1].vazia())
 			{
-				String movAux = mov;
+				//Verificando o movimento para cima e direita
 				for(int I = i-1, J = j+1; I >= 0 && J <= 7; I--, J++)
 				{
 					if(!casa[I][J].vazia())
@@ -549,16 +596,16 @@ public class Tabuleiro extends JFrame implements ActionListener
 					else
 					{
 						mov += String.format("%d/%d/%d/%d/", I, J, I, J);
-						System.out.println("Mov cima direita " + I + " " + J);
-						comer = simularJogada(I, J, true, true, true, false, false, tamanho, mov, dama);
-						System.out.println("RETORNO");
+						comer = simularJogada(I, J, false, true, false, false, false, tamanho, mov, dama, pecasComidas);
+						//comer = simularJogada(I, J, true, true, true, false, false, tamanho, mov, dama, pecasComidas);
 					}
 				}
+				mov = movAux;
 			}
 			
 			if(i <= 6 && j >= 1 && t1 && casa[i+1][j-1].vazia())
 			{
-				String movAux = mov;
+				//Verificando o movimento para baixo e direita
 				for(int I = i+1, J = j-1; I <= 7 && J >= 0; I++, J--)
 				{
 					if(!casa[I][J].vazia())
@@ -566,16 +613,15 @@ public class Tabuleiro extends JFrame implements ActionListener
 					else
 					{
 						mov += String.format("%d/%d/%d/%d/", I, J, I, J);
-						System.out.println("Mov baixo esquerda " + I + " " + J);
-						comer = simularJogada(I, J, true, false, true, true, false, tamanho, mov, dama);
-						System.out.println("RETORNO");
+						comer = simularJogada(I, J, false, false, true, false, false, tamanho, mov, dama, pecasComidas);
+						//comer = simularJogada(I, J, true, false, true, true, false, tamanho, mov, dama, pecasComidas);
 					}
 				}
+				mov = movAux;
 			}
 			
 			if(i <= 6 && j <= 6 && t2 && casa[i+1][j+1].vazia())
 			{
-				String movAux = mov;
 				for(int I = i+1, J = j+1; I <= 7 && J <= 7; I++, J++)
 				{
 					if(!casa[I][J].vazia())
@@ -583,11 +629,11 @@ public class Tabuleiro extends JFrame implements ActionListener
 					else
 					{
 						mov += String.format("%d/%d/%d/%d/", I, J, I, J);
-						System.out.println("Mov baixo direita " + I + " " + J);
-						comer = simularJogada(I, J, false, true, true, true, false, tamanho, mov, dama);
-						System.out.println("RETORNO");
+						comer = simularJogada(I, J, false, false, false, true, false, tamanho, mov, dama, pecasComidas);
+						//comer = simularJogada(I, J, false, true, true, true, false, tamanho, mov, dama, pecasComidas);
 					}
 				}
+				mov = movAux;
 			}
 		}
 		
@@ -632,7 +678,7 @@ public class Tabuleiro extends JFrame implements ActionListener
 			/*if(!casaX.pecaAtual().dama())
 			{*/
 				limparJogadas();
-				simularJogada(i, j, true, true, true, true, true, 0, "", casaX.pecaAtual().dama());//Marcando as pecas envolvidas no movimento de comer
+				simularJogada(i, j, true, true, true, true, true, 0, "", casaX.pecaAtual().dama(), "");//Marcando as pecas envolvidas no movimento de comer
 			//}
 			System.out.println(indJogada);
 			for(int x = 0; x < indJogada; x++)
@@ -640,10 +686,8 @@ public class Tabuleiro extends JFrame implements ActionListener
 				if(maioresJogadas[x].length() > 0 && maioresJogadas[x].charAt(maioresJogadas[x].length()-1) == '/')
 					maioresJogadas[x] = maioresJogadas[x].substring(0, maioresJogadas[x].length()-1);
 				
-				System.out.println(maioresJogadas[x]);
 				int I = 0, J = 0, y;
 				String indComer[] = maioresJogadas[x].split("/");
-				System.out.println("Movimento marcado");
 				for(y = 1; y < indComer.length; y += 2)
 				{
 					I = Integer.parseInt(indComer[y-1]);
@@ -653,11 +697,6 @@ public class Tabuleiro extends JFrame implements ActionListener
 					{
 						comerI[x].adicionar(I);
 						comerJ[x].adicionar(J);
-						System.out.printf("Comer (%d,%d)\n", I, J);
-					}
-					else
-					{
-						System.out.printf("Mover (%d,%d)\n", I, J);
 					}
 				}
 				for(y = indComer.length-1; y > 0; y -= 2)
@@ -729,6 +768,108 @@ public class Tabuleiro extends JFrame implements ActionListener
 						casa[I][J].setMarcada(true);
 				}
 			}
+		}
+	}
+	
+	
+	public class BTimer implements ActionListener
+	{
+		private Timer timer;
+		
+		//Atributos para os eventos do Timer
+		private int posI, posJ, futI, futJ;
+		private boolean mover, comer;
+		
+		private Casa casas[][] = new Casa[20][3];
+		private int indCasa = 0;
+		private int cont = 0;
+
+		private Fila movimentos = new Fila(20);
+		
+		public BTimer()
+		{
+			timer = new Timer(450, this);
+			timer.setRepeats(false);
+		}
+
+		public void start()
+		{
+			timer.start();
+		}
+
+		public void stop()
+		{
+			timer.stop();
+		}
+
+		public void setInitial(int ms)
+		{
+			timer.setInitialDelay(ms);
+		}
+		
+		public void actionPerformed(ActionEvent e)
+		{
+			if(movimentos.obter(cont) == 0)
+			{
+				Casa atual = casas[cont][0], futura = casas[cont][1];
+				//Evitando null pointer caso tenha movimentos para a mesma pedra no futuro
+				for(int i = cont+1; i < indCasa; i++)
+					if(casas[i][0] == atual)
+						casas[i][0] = futura;
+				
+				moverPeca(atual, futura);
+				cont++;
+			}
+			else
+			{
+				Casa atual = casas[cont][0], comer = casas[cont][1], futura = casas[cont][2];
+				//Evitando null pointer caso tenha movimentos para a mesma pedra no futuro
+				for(int i = cont+1; i < indCasa; i++)
+					if(casas[i][0] == atual)
+						casas[i][0] = futura;
+				
+				
+				jogador[comer.pecaAtual().getTipo()].decPecas();
+				casa[comer.getPosI()][comer.getPosJ()].pecaAtual().setEmJogo(false);
+				casa[comer.getPosI()][comer.getPosJ()].pecaAtual().setJogavel(false);
+				casa[comer.getPosI()][comer.getPosJ()].removerPeca();
+				atual.pecaAtual().setComer(false);
+				moverPeca(atual, futura);
+				cont++;
+			}
+			System.out.println("CONT = " + cont + " | IND = " + indCasa);
+			if(cont == indCasa)
+			{
+				movimentos.limpar();
+				indCasa = 0;
+				cont = 0;
+				timer.setInitialDelay(450);
+				proximaRodada();
+			}
+			else if(cont < indCasa)
+			{
+				timer.start();
+			}
+		}
+		
+		public void setMove(Casa at, Casa fut)
+		{
+			casas[indCasa][0] = at;
+			casas[indCasa++][1] = fut;
+			System.out.printf("MOV ADICIONADO [%d][%d]\n", fut.getPosI(), fut.getPosJ());
+			movimentos.adicionar(0);
+			mover = true;
+			comer = false;
+		}
+		
+		public void setComer(Casa at, Casa cm, Casa fut)
+		{
+			casas[indCasa][0] = at;
+			casas[indCasa][1] = cm;
+			casas[indCasa++][2] = fut;
+			movimentos.adicionar(1);
+			mover = false;
+			comer = true;
 		}
 	}
 }

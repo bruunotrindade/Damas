@@ -1,7 +1,6 @@
 package gui;
 
-import java.applet.Applet;
-import java.applet.AudioClip;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -19,6 +18,11 @@ public class Inicio extends JFrame implements ActionListener
 	
 	JButton btUmJogador = new JButton("Um jogador");
 	JButton btDoisJogadores = new JButton("Dois jogadores");
+	
+	JMenuBar menuBar = new JMenuBar();
+	JMenu mnOpcoes = new JMenu("Opções");
+	JMenuItem mitmCadastro = new JMenuItem("Cadastro");
+	JMenuItem mitmRanking = new JMenuItem("Ranking");
 	
 	public Inicio() 
 	{
@@ -39,7 +43,15 @@ public class Inicio extends JFrame implements ActionListener
 		btDoisJogadores.setFocusPainted(false);
 		btDoisJogadores.addActionListener(this);
 		btDoisJogadores.setBackground(Color.WHITE);
-		//play();
+		
+		setJMenuBar(menuBar);
+		menuBar.add(mnOpcoes);
+		
+		mitmCadastro.addActionListener(this);
+		mnOpcoes.add(mitmCadastro);
+		
+		mitmRanking.addActionListener(this);
+		mnOpcoes.add(mitmRanking);
 
 		setVisible(true);
 		setSize(490, 399);
@@ -48,15 +60,11 @@ public class Inicio extends JFrame implements ActionListener
 		setTitle("Damas");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
-
-	public void play() {
-		/*URL url = this.getClass().getResource("tema.wav");
-		AudioClip audio = Applet.newAudioClip(url);
-		audio.play();*/
-	}
 	
 	public static void main(String[] args)
 	{
+		Cadastro.jogador[0] = new Jogador("Branco");
+		Cadastro.jogador[1] = new Jogador("Preto");
 		new Inicio();
 	}
 
@@ -64,11 +72,6 @@ public class Inicio extends JFrame implements ActionListener
 	{
 		if(e.getSource() == btUmJogador)
 		{
-			/*Jogador jg = new Jogador("Preto");
-			JanelaFinal end = new JanelaFinal(0, 0);
-			end.setVencedor(jg);
-			end.setTempo(68);
-			end.mostrar();*/
 			dispose();
 			new Tabuleiro();
 		}
@@ -76,6 +79,14 @@ public class Inicio extends JFrame implements ActionListener
 		{
 			dispose();
 			new Tabuleiro(0);
+		}
+		else if(e.getSource() == mitmCadastro)
+		{
+			new Cadastro();
+		}
+		else if(e.getSource() == mitmRanking)
+		{
+			new Ranking();
 		}
 	}
 }

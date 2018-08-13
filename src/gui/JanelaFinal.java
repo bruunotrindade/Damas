@@ -125,6 +125,18 @@ public class JanelaFinal extends JDialog implements ActionListener
 	{
 		tempo = tmp;
 		lbTempo.setText(String.format("Tempo: %02d:%02d", tempo/60, tempo%60));
+		for(int i = 0; i < 5; i++)
+			if(tempo < Ranking.tempo[i] || Ranking.nomes[i].length() == 0)
+			{
+				for(int j = 4; j > i; j--)
+				{
+					Ranking.tempo[j] = Ranking.tempo[j-1];
+					Ranking.nomes[j] = Ranking.nomes[j-1];
+				}
+				Ranking.tempo[i] = tempo;
+				Ranking.nomes[i] = vencedor.getNome();
+				break;
+			}
 	}
 	
 	public void mostrar()

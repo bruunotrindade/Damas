@@ -28,6 +28,11 @@ public class Jogador
 		melhorTempo = tempo;
 	}
 	
+	public void setNome(String nom)
+	{
+		nome = nom;
+	}
+	
 	public int getPecas()
 	{
 		return pecas;
